@@ -208,10 +208,16 @@
                 <h2 class="section-title text-purple-700"><i class="fas fa-book-open mr-4"></i>Introducción al Marco</h2>
                 <div id="content-intro">
                     <p class="content-paragraph">
-                        El Marco de Competencias de los Docentes en materia de TIC (ICT-CFT) de la UNESCO es una herramienta fundamental para guiar la formación inicial y continua de los docentes en el uso de las TIC. Su objetivo es asegurar que los educadores estén equipados para las sociedades del conocimiento en evolución.
+                        El <strong>Marco de Competencias de los Docentes en materia de TIC (ICT-CFT) de la UNESCO</strong> es una iniciativa clave diseñada para guiar la formación inicial y continua de los educadores en el uso estratégico de las Tecnologías de la Información y la Comunicación (TIC) en el ámbito educativo. Su propósito fundamental es empoderar a los docentes para que, a su vez, puedan preparar a las nuevas generaciones para prosperar en las dinámicas y cambiantes sociedades del conocimiento.
                     </p>
                     <p class="content-paragraph">
-                        Publicado en 2019 (Versión 3), este marco aborda los avances tecnológicos y pedagógicos recientes, incorporando principios de no discriminación, acceso equitativo y abierto a la información, e igualdad de género. Es una herramienta dinámica, diseñada para ser adaptada a contextos nacionales e institucionales.
+                        Publicada en su <strong>Versión 3 en 2019</strong>, este marco se actualiza constantemente para reflejar la rápida evolución tecnológica y las innovaciones pedagógicas. Integra principios cruciales como la <strong>no discriminación</strong>, el <strong>acceso equitativo y abierto a la información</strong>, y la <strong>igualdad de género</strong>. Esto asegura que la educación apoyada por la tecnología sea inclusiva y beneficie a todos los estudiantes, sin importar su origen o capacidad.
+                    </p>
+                    <p class="content-paragraph">
+                        El Marco es una herramienta dinámica, lo que significa que no es un conjunto de reglas rígidas, sino una guía flexible que puede ser adaptada y contextualizada según los objetivos nacionales e institucionales de cada sistema educativo. Responde directamente a la <strong>Agenda 2030 para el Desarrollo Sostenible</strong> de las Naciones Unidas, destacando el papel crucial de las TIC en la consecución de objetivos como la educación de calidad (ODS 4), la igualdad de género (ODS 5) y la reducción de las desigualdades (ODS 10).
+                    </p>
+                    <p class="content-paragraph">
+                        En resumen, el ICT-CFT busca transformar la pedagogía a través del uso efectivo de las TIC, fomentando en los docentes las habilidades necesarias para guiar a los alumnos en la adquisición de competencias esenciales para el siglo XXI, como el pensamiento crítico, la resolución de problemas complejos, la colaboración y las aptitudes socioemocionales.
                     </p>
                     <button id="button-start-quiz-intro" class="quiz-button" onclick="startQuizFlow('intro')">Iniciar Cuestionario</button>
                 </div>
@@ -798,7 +804,9 @@
          * Sends the report data to a PHP script for email sending.
          */
         async function sendEmailReport() {
-            const phpScriptUrl = './send_email.php'; // <--- IMPORTANT: Update this URL to your PHP script's location
+            // IMPORTANT: Update this URL to your PHP script's location on your *PHP server*
+            // Example: const phpScriptUrl = 'https://tuservidor.com/api/send_email.php';
+            const phpScriptUrl = './send_email.php'; 
 
             let overallScore = 0;
             let overallTotal = 0;
@@ -861,7 +869,8 @@
                     body: JSON.stringify({
                         to: '941981300.b@gmail.com',
                         subject: `Reporte de Resultados TIC UNESCO - ${userData.userName}`,
-                        htmlContent: emailBodyHtml
+                        htmlContent: emailBodyHtml,
+                        fromEmail: userData.userEmail // Pass user's email for reply-to
                     })
                 });
 
