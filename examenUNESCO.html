@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marco de Competencias TIC para Docentes - UNESCO</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <!-- jsPDF and html2canvas for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            padding: 20px;
+        }
+        .section-card {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            padding: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #2c3e50; /* Dark blue-gray */
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .subsection-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #34495e; /* Medium blue-gray */
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .subsection-title i {
+            margin-right: 15px;
+            font-size: 2rem;
+            color: #3498db; /* Bright blue */
+        }
+        .content-paragraph {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        .quiz-container {
+            background-color: #ecf0f1; /* Light gray */
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid #bdc3c7;
+        }
+        .quiz-question {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .quiz-option {
+            margin-bottom: 8px;
+            cursor: pointer;
+            padding: 12px 18px; /* Larger padding for button feel */
+            border-radius: 10px; /* Rounded corners */
+            transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            background-color: #f8f9fa; /* Light background */
+            border: 2px solid #ced4da; /* Light border */
+            display: flex;
+            align-items: center;
+        }
+        .quiz-option:hover {
+            background-color: #e9ecef; /* Slightly darker on hover */
+            border-color: #a7b7c7; /* Darker border on hover */
+        }
+        .quiz-option input[type="radio"] {
+            margin-right: 12px; /* Space between radio and text */
+            transform: scale(1.2); /* Slightly larger radio button */
+            accent-color: #3498db; /* Blue accent color for radio */
+        }
+        .quiz-option input[type="radio"]:checked + span { /* Targeting the span next to the radio for checked state */
+            font-weight: 600;
+            color: #34495e;
+        }
+        .quiz-option.selected-option { /* Visual for currently selected option */
+            background-color: #dbeaff; /* Light blue */
+            border-color: #3498db; /* Blue border */
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3); /* Light blue shadow */
+        }
+
+        .quiz-button {
+            background-color: #2ecc71; /* Emerald green */
+            color: white;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-weight: 600;
+            border: none;
+        }
+        .quiz-button:hover {
+            background-color: #27ae60; /* Darker emerald green */
+        }
+        .quiz-score-summary {
+            background-color: #d1f3e0; /* Lighter emerald */
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #27ae60;
+            text-align: center;
+            border: 1px solid #2ecc71;
+        }
+        .score-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3498db;
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+        }
+        .feedback {
+            margin-top: 10px;
+            font-weight: 500;
+        }
+        .correct {
+            color: #27ae60;
+        }
+        .incorrect {
+            color: #e74c3c;
+        }
+        .result-message {
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        .answered-correctly {
+            background-color: #d1f3e0; /* Light green for correct */
+        }
+        .answered-incorrectly {
+            background-color: #f9dcdc; /* Light red for incorrect */
+        }
+        .not-answered {
+            background-color: #fdfae0; /* Light yellow for not answered */
+        }
+        .question-block {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .timer-display {
+            font-size: 0.9em;
+            color: #e74c3c;
+            font-weight: normal;
+        }
+        .quiz-navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-center text-blue-800 my-10">
+            <i class="fas fa-chalkboard-teacher mr-4 text-blue-600"></i>Marco de Competencias TIC para Docentes<i class="fas fa-lightbulb ml-4 text-yellow-500"></i>
+        </h1>
+        <p class="content-paragraph text-center text-lg text-gray-700 mb-8">
+            Explora el Marco de Competencias de la UNESCO para integrar eficazmente las Tecnologías de la Información y la Comunicación (TIC) en la educación. Una guía interactiva para docentes y formadores.
+        </p>
+
+        <!-- Sección: Datos del Usuario -->
+        <div id="user-data-form-container" class="section-card">
+            <h2 class="section-title text-blue-700"><i class="fas fa-user-circle mr-4"></i>Datos del Usuario</h2>
+            <form onsubmit="event.preventDefault(); collectUserDataAndStart();">
+                <div class="mb-4">
+                    <label for="userName" class="block text-gray-700 text-sm font-bold mb-2">Nombre Completo:</label>
+                    <input type="text" id="userName" name="userName" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <div class="mb-4">
+                    <label for="userEmail" class="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico:</label>
+                    <input type="email" id="userEmail" name="userEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                </div>
+                <button type="submit" class="quiz-button bg-blue-500 hover:bg-blue-700">Iniciar Test</button>
+            </form>
+        </div>
+
+        <!-- Contenido principal y secciones de cuestionarios (oculto hasta que se ingresen los datos del usuario) -->
+        <div id="main-content" class="hidden">
+            <!-- Sección 1: Introducción al Marco -->
+            <div id="section-intro" class="section-card">
+                <h2 class="section-title text-purple-700"><i class="fas fa-book-open mr-4"></i>Introducción al Marco</h2>
+                <div id="content-intro">
+                    <p class="content-paragraph">
+                        El Marco de Competencias de los Docentes en materia de TIC (ICT-CFT) de la UNESCO es una herramienta fundamental para guiar la formación inicial y continua de los docentes en el uso de las TIC. Su objetivo es asegurar que los educadores estén equipados para las sociedades del conocimiento en evolución.
+                    </p>
+                    <p class="content-paragraph">
+                        Publicado en 2019 (Versión 3), este marco aborda los avances tecnológicos y pedagógicos recientes, incorporando principios de no discriminación, acceso equitativo y abierto a la información, e igualdad de género. Es una herramienta dinámica, diseñada para ser adaptada a contextos nacionales e institucionales.
+                    </p>
+                    <button id="button-start-quiz-intro" class="quiz-button" onclick="startQuizFlow('intro')">Iniciar Cuestionario</button>
+                </div>
+
+                <div class="quiz-container hidden" id="quiz-intro">
+                    <h3 class="subsection-title text-blue-600"><i class="fas fa-question-circle"></i>Cuestionario - Introducción</h3>
+                    <form onsubmit="submitQuiz(event, 'intro')">
+                        <!-- Preguntas generadas dinámicamente por JavaScript -->
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sección 2: Estructura del Marco (Niveles y Aspectos) -->
+            <div id="section-structure" class="section-card">
+                <h2 class="section-title text-green-700"><i class="fas fa-sitemap mr-4"></i>Estructura del Marco</h2>
+                <div id="content-structure">
+                    <p class="content-paragraph">
+                        El Marco se organiza en <strong>18 competencias</strong>, distribuidas en tres <strong>niveles</strong> de uso pedagógico de las TIC y seis <strong>aspectos</strong> de la práctica profesional docente.
+                    </p>
+
+                    <h3 class="subsection-title text-green-600"><i class="fas fa-layer-group"></i>Niveles de Desarrollo</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="p-6 bg-blue-50 rounded-lg shadow-md border-l-4 border-blue-500">
+                            <h4 class="font-bold text-xl text-blue-800 mb-3"><i class="fas fa-user-graduate mr-2"></i>I. Adquisición de Conocimientos</h4>
+                            <p class="text-gray-700">Los docentes adquieren conocimientos básicos sobre el uso de la tecnología y competencias TIC esenciales para ayudar a los alumnos a utilizar las TIC de forma productiva.</p>
+                        </div>
+                        <div class="p-6 bg-purple-50 rounded-lg shadow-md border-l-4 border-purple-500">
+                            <h4 class="font-bold text-xl text-purple-800 mb-3"><i class="fas fa-brain mr-2"></i>II. Profundización de Conocimientos</h4>
+                            <p class="text-gray-700">Los docentes desarrollan competencias TIC para crear entornos de aprendizaje colaborativos y cooperativos, centrados en el estudiante, y para resolver problemas complejos de la vida real.</p>
+                        </div>
+                        <div class="p-6 bg-red-50 rounded-lg shadow-md border-l-4 border-red-500">
+                            <h4 class="font-bold text-xl text-red-800 mb-3"><i class="fas fa-flask mr-2"></i>III. Creación de Conocimientos</h4>
+                            <p class="text-gray-700">Los docentes modelan buenas prácticas y crean entornos de aprendizaje que permiten a los alumnos generar nuevos conocimientos, fomentando la innovación y el aprendizaje a lo largo de toda la vida.</p>
+                        </div>
+                    </div>
+
+                    <h3 class="subsection-title text-green-600"><i class="fas fa-cubes"></i>Aspectos de la Práctica Docente</h3>
+                    <ul class="list-disc pl-5 mb-8 text-gray-700">
+                        <li class="mb-2"><strong class="text-orange-700"><i class="fas fa-file-contract mr-2"></i>Comprensión del papel de las TIC en las políticas educativas:</strong> Entender la relación de las TIC con las prioridades nacionales en educación.</li>
+                        <li class="mb-2"><strong class="text-teal-700"><i class="fas fa-book mr-2"></i>Currículo y evaluación:</strong> Cómo las TIC pueden promover objetivos curriculares y ayudar en la evaluación.</li>
+                        <li class="mb-2"><strong class="text-yellow-700"><i class="fas fa-users-class mr-2"></i>Pedagogía:</strong> Perfeccionar los métodos de enseñanza y aprendizaje a través de las TIC.</li>
+                        <li class="mb-2"><strong class="text-cyan-700"><i class="fas fa-laptop-code mr-2"></i>Aplicación de competencias digitales:</strong> Desarrollar habilidades básicas y avanzadas en el uso de herramientas digitales.</li>
+                        <li class="mb-2"><strong class="text-indigo-700"><i class="fas fa-building mr-2"></i>Organización y administración:</strong> Gestionar activos digitales y proteger a los usuarios, transformando el entorno escolar.</li>
+                        <li class="mb-2"><strong class="text-pink-700"><i class="fas fa-graduation-cap mr-2"></i>Aprendizaje profesional de los docentes:</strong> Fomentar el desarrollo profesional continuo a través de las TIC.</li>
+                    </ul>
+                    <button id="button-start-quiz-structure" class="quiz-button" onclick="startQuizFlow('structure')">Iniciar Cuestionario</button>
+                </div>
+
+                <div class="quiz-container hidden" id="quiz-structure">
+                    <h3 class="subsection-title text-blue-600"><i class="fas fa-question-circle"></i>Cuestionario - Estructura</h3>
+                    <form onsubmit="submitQuiz(event, 'structure')">
+                        <!-- Preguntas generadas dinámicamente por JavaScript -->
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sección 3: Innovaciones en TIC y Principios Transversales -->
+            <div id="section-innovations" class="section-card">
+                <h2 class="section-title text-orange-700"><i class="fas fa-cogs mr-4"></i>Innovaciones TIC y Principios</h2>
+                <div id="content-innovations">
+                    <p class="content-paragraph">
+                        La Versión 3 del Marco integra referencias a innovaciones tecnológicas clave y principios transversales que guían su aplicación.
+                    </p>
+
+                    <h3 class="subsection-title text-orange-600"><i class="fas fa-lightbulb"></i>Innovaciones Tecnológicas</h3>
+                    <ul class="list-disc pl-5 mb-8 text-gray-700">
+                        <li class="mb-2"><strong class="text-purple-700">Recursos Educativos Abiertos (REA):</strong> Materiales educativos de libre acceso y reutilización, facilitando el intercambio de conocimientos.</li>
+                        <li class="mb-2"><strong class="text-blue-700">Redes sociales:</strong> Herramientas para mejorar la comunicación pedagógica y el aprendizaje interactivo, pero con la necesidad de abordar sus riesgos (acoso, desinformación).</li>
+                        <li class="mb-2"><strong class="text-green-700">Tecnologías móviles:</strong> Permiten un aprendizaje flexible en cualquier momento y lugar, promoviendo la equidad educativa y la personalización.</li>
+                        <li class="mb-2"><strong class="text-red-700">Internet de las cosas (IoT):</strong> La red de dispositivos interconectados que transforma la forma en que alumnos y docentes interactúan con el entorno educativo.</li>
+                        <li class="mb-2"><strong class="text-yellow-700">Inteligencia Artificial (IA):</strong> Ofrece oportunidades para el aprendizaje adaptativo, diagnósticos y automatización de calificaciones, pero plantea inquietudes éticas y de privacidad.</li>
+                        <li class="mb-2"><strong class="text-teal-700">Realidad Virtual (RV) y Realidad Aumentada (RA):</strong> Permiten el aprendizaje experiencial a través de simulaciones inmersivas.</li>
+                        <li class="mb-2"><strong class="text-indigo-700">Macrodatos:</strong> La capacidad de analizar grandes volúmenes de datos para entender el aprendizaje y las interacciones.</li>
+                        <li class="mb-2"><strong class="text-pink-700">Codificación:</strong> Enseña a los estudiantes a organizar, expresar e intercambiar ideas de nuevas maneras a través de la creación de programas informáticos.</li>
+                        <li class="mb-2"><strong class="text-gray-700">Ética y protección de la privacidad:</strong> Consideraciones cruciales sobre las repercusiones éticas y de derechos humanos del uso de las TIC.</li>
+                    </ul>
+
+                    <h3 class="subsection-title text-orange-600"><i class="fas fa-handshake"></i>Principios Transversales</h3>
+                    <ul class="list-disc pl-5 mb-8 text-gray-700">
+                        <li class="mb-2"><strong class="text-red-700">Sociedades del conocimiento:</strong> Fomentar la diversidad y aprovechar múltiples formas de conocimiento (local, indígena, científico).</li>
+                        <li class="mb-2"><strong class="text-blue-700">Diseño Universal para el Aprendizaje (DUA):</strong> Diseñar currículos y entornos flexibles e inclusivos que se adapten a necesidades individuales.</li>
+                        <li class="mb-2"><strong class="text-green-700">Educación inclusiva:</strong> Respetar la no discriminación, el acceso a la información y la igualdad de género en la educación, considerando idiomas, culturas, discapacidades y capacidades diversas.</li>
+                    </ul>
+                    <button id="button-start-quiz-innovations" class="quiz-button" onclick="startQuizFlow('innovations')">Iniciar Cuestionario</button>
+                </div>
+
+                <div class="quiz-container hidden" id="quiz-innovations">
+                    <h3 class="subsection-title text-blue-600"><i class="fas fa-question-circle"></i>Cuestionario - Innovaciones y Principios</h3>
+                    <form onsubmit="submitQuiz(event, 'innovations')">
+                        <!-- Preguntas generadas dinámicamente por JavaScript -->
+                    </form>
+                </div>
+            </div>
+
+            <!-- Sección de Resumen de Puntajes -->
+            <div id="score-summary-section" class="section-card hidden">
+                <h2 class="section-title text-blue-800"><i class="fas fa-chart-bar mr-4"></i>Resumen General de Puntajes</h2>
+                <div id="overall-score-display" class="score-display"></div>
+                <p class="content-paragraph text-center mt-4">¡Felicidades por completar todos los cuestionarios! Sigue explorando y aplicando tus conocimientos.</p>
+                <button class="quiz-button bg-purple-600 hover:bg-purple-700 mt-4" onclick="generatePdfReport()">Descargar Reporte PDF</button>
+                <button class="quiz-button bg-blue-600 hover:bg-blue-700 mt-4" onclick="sendEmailReport()">Enviar Reporte por Email</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for quiz management
+        const quizScores = {
+            intro: { score: 0, total: 5, completed: false, userAnswers: {} },
+            structure: { score: 0, total: 5, completed: false, userAnswers: {} },
+            innovations: { score: 0, total: 5, completed: false, userAnswers: {} }
+        };
+
+        // Stores correct answers for the *currently displayed* questions
+        const correctAnswers = {
+            intro: {},
+            structure: {},
+            innovations: {}
+        };
+
+        // Pool of all possible questions for each section (approx. 10-15 per section to allow randomness)
+        const allQuestionsPool = {
+            intro: [
+                { q: "¿Cuál es el propósito principal del Marco de Competencias TIC de la UNESCO?", options: ["A) Recopilar datos sobre el uso de TIC en escuelas.", "B) Guiar la formación docente en el uso de las TIC.", "C) Evaluar la infraestructura tecnológica de los países.", "D) Promover la venta de software educativo."], ans: "b" },
+                { q: "¿En qué año se publicó la Versión 3 del Marco?", options: ["A) 2008", "B) 2011", "C) 2019", "D) 2015"], ans: "c" },
+                { q: "¿Qué principios incorpora la Versión 3 del Marco?", options: ["A) Solo principios económicos.", "B) Principios de exclusividad tecnológica.", "C) No discriminación, acceso equitativo y abierto a la información, e igualdad de género.", "D) Principios de competencia exclusiva."], ans: "c" },
+                { q: "¿A quiénes se dirige principalmente el Marco de Competencias TIC?", options: ["A) Solo a estudiantes universitarios.", "B) Solo a desarrolladores de software.", "C) Personal de formación docente, expertos educacionales, encargados de políticas y personal de apoyo.", "D) Únicamente a administradores escolares."], ans: "c" },
+                { q: "¿Qué significa que el Marco tiene un 'carácter dinámico'?", options: ["A) Que solo se aplica en países en desarrollo.", "B) Que se mantiene sin cambios desde su primera versión.", "C) Que es revisado periódicamente para garantizar su pertinencia.", "D) Que solo se puede usar en línea."], ans: "c" },
+                { q: "¿Cuántas versiones del Marco de competencias de los docentes en materia de TIC se han publicado hasta 2018?", options: ["A) Una", "B) Dos", "C) Tres", "D) Cuatro"], ans: "c" },
+                { q: "¿Cuál fue una de las organizaciones asociadas en la elaboración del Marco ICT-CFT?", options: ["A) Google", "B) Microsoft", "C) Apple", "D) Samsung"], ans: "b" },
+                { q: "¿El Marco ICT-CFT está diseñado para ser fijo o adaptable?", options: ["A) Fijo, sin posibilidad de cambios.", "B) Adaptable a objetivos nacionales e institucionales.", "C) Solo adaptable a nivel internacional.", "D) Fijo, pero con actualizaciones anuales."], ans: "b" },
+                { q: "¿Qué aspecto fundamental de la sociedad del conocimiento se enfatiza en la Agenda 2030?", options: ["A) La exclusión digital.", "B) La construcción de sociedades del conocimiento inclusivas.", "C) La centralización de la información.", "D) La privatización de la educación."], ans: "b" },
+                { q: "¿El Marco promueve la formación docente como un evento puntual o un proceso de aprendizaje de toda la vida?", options: ["A) Un evento puntual.", "B) Un proceso de aprendizaje durante toda la vida.", "C) Un curso de corta duración.", "D) Una certificación única."], ans: "b" }
+            ],
+            structure: [
+                { q: "¿Cuántas competencias en total comprende el Marco de Competencias TIC de la UNESCO?", options: ["A) 6", "B) 12", "C) 18", "D) 24"], ans: "c" },
+                { q: "¿Qué nivel de desarrollo se enfoca en ayudar a los alumnos a generar nuevos conocimientos?", options: ["A) Adquisición de Conocimientos", "B) Profundización de Conocimientos", "C) Creación de Conocimientos", "D) Alfabetización Tecnológica"], ans: "c" },
+                { q: "¿Cuál de los siguientes NO es un aspecto de la práctica profesional docente en el Marco?", options: ["A) Currículo y evaluación", "B) Marketing escolar", "C) Pedagogía", "D) Organización y administración"], ans: "b" },
+                { q: "En el nivel de Adquisición de Conocimientos, ¿qué hacen los docentes con las TIC?", options: ["A) Crean software educativo avanzado.", "B) Utilizan la tecnología para complementar lo que ya hacen en clase.", "C) Diseñan nuevas políticas educativas.", "D) Lideran la innovación tecnológica en su escuela."], ans: "b" },
+                { q: "¿Qué aspecto se relaciona con la gestión de activos digitales y la protección de usuarios?", options: ["A) Pedagogía", "B) Currículo y evaluación", "C) Aprendizaje profesional de los docentes", "D) Organización y administración"], ans: "d" },
+                { q: "¿Cuántos aspectos de la práctica profesional docente se identifican en el Marco?", options: ["A) 3", "B) 6", "C) 9", "D) 18"], ans: "b" },
+                { q: "¿En qué nivel los docentes empiezan a explotar el verdadero potencial de la tecnología y a cambiar el modo de enseñanza y aprendizaje?", options: ["A) Adquisición de conocimientos", "B) Profundización de conocimientos", "C) Creación de conocimientos", "D) Alfabetización digital"], ans: "b" },
+                { q: "¿Qué aspecto alienta a los docentes a entender la relación de las TIC con las prioridades nacionales en educación?", options: ["A) Currículo y evaluación", "B) Pedagogía", "C) Comprensión del papel de las TIC en las políticas educativas", "D) Aplicación de competencias digitales"], ans: "c" },
+                { q: "En el nivel de Creación de Conocimientos, ¿qué papel asumen los docentes?", options: ["A) Meros usuarios de tecnología.", "B) Modelan buenas prácticas y crean entornos de aprendizaje que permiten a los alumnos generar nuevos conocimientos.", "C) Se centran únicamente en la alfabetización digital.", "D) Administran el hardware escolar."], ans: "b" },
+                { q: "¿Cuál es el objetivo del nivel de Profundización de conocimientos?", options: ["A) Adquirir competencias básicas en TIC.", "B) Ayudar a los alumnos a aplicar conocimientos para resolver problemas complejos de la vida real.", "C) Centrarse solo en el perfeccionamiento profesional del docente.", "D) Diseñar programas de software."], ans: "b" }
+            ],
+            innovations: [
+                { q: "¿Qué tipo de recursos educativos son de libre acceso y reutilización?", options: ["A) Recursos Educativos Cerrados", "B) Recursos Educativos Propietarios", "C) Recursos Educativos Abiertos (REA)", "D) Recursos Educativos Restringidos"], ans: "c" },
+                { q: "¿Cuál es el riesgo principal asociado al uso de redes sociales en la educación que los docentes deben abordar?", options: ["A) Exceso de comunicación.", "B) Costo de las aplicaciones.", "C) Acoso e intimidación en línea.", "D) Falta de contenido educativo."], ans: "c" },
+                { q: "¿Qué principio transversal busca adaptar los currículos y entornos a las necesidades individuales de los alumnos?", options: ["A) Sociedades del conocimiento", "B) Educación inclusiva", "C) Diseño Universal para el Aprendizaje (DUA)", "D) Aprendizaje basado en proyectos"], ans: "c" },
+                { q: "¿Qué tecnología simula el pensamiento humano y se utiliza en aprendizaje adaptativo?", options: ["A) Realidad Virtual", "B) Codificación", "C) Internet de las Cosas", "D) Inteligencia Artificial (IA)"], ans: "d" },
+                { q: "¿Cuál es un objetivo de la codificación en la educación?", options: ["A) Crear videojuegos para entretenimiento.", "B) Enseñar a los estudiantes a organizar, expresar e intercambiar ideas de nuevas maneras.", "C) Automatizar todas las tareas docentes.", "D) Reemplazar la escritura tradicional."], ans: "b" },
+                { q: "¿Qué innovación TIC permite el aprendizaje empírico al simular entornos del mundo real?", options: ["A) Macrodatos", "B) Realidad Virtual (RV)", "C) Redes Sociales", "D) Inteligencia Artificial"], ans: "b" },
+                { q: "¿Cuál de los siguientes NO es un principio transversal en la Versión 3 del Marco?", options: ["A) Sociedades del conocimiento", "B) Diseño Universal para el Aprendizaje (DUA)", "C) Educación exclusiva", "D) Educación inclusiva"], ans: "c" },
+                { q: "¿Qué preocupación ética surge con la aceleración de los avances tecnológicos, según el Marco?", options: ["A) El aumento de la conectividad.", "B) El impacto en el costo del hardware.", "C) La protección de la privacidad y seguridad de los datos.", "D) La velocidad de internet."], ans: "c" },
+                { q: "¿Qué tipo de datos se generan a un ritmo extraordinario debido a las conexiones en línea entre personas y aparatos?", options: ["A) Datos de texto simples.", "B) Macrodatos.", "C) Datos analógicos.", "D) Datos estáticos."], ans: "b" },
+                { q: "¿Qué tecnología móvil se menciona como promotora de equidad educativa y aprendizaje personalizado?", options: ["A) Teléfonos de línea fija.", "B) Computadoras de escritorio.", "C) Teléfonos inteligentes y tabletas.", "D) Pizarras interactivas."], ans: "c" }
+            ]
+        };
+
+        // Global variables for timer management
+        let currentQuestionTimer = null;
+        let currentQuizId = null;
+        let currentQuestionIndex = 0;
+        const QUESTION_TIME_LIMIT = 30; // seconds per question
+
+        // User data storage
+        let userData = {
+            userName: '',
+            userEmail: '',
+            browser: navigator.userAgent,
+            os: navigator.platform, // Provides OS info (e.g., "Win32", "MacIntel", "Linux x86_64")
+            dateTime: ''
+        };
+
+        /**
+         * Selects a specified number of random questions from a given pool.
+         * @param {Array} pool - The array of question objects.
+         * @param {number} num - The number of questions to select.
+         * @returns {Array} An array of randomly selected questions.
+         */
+        function getRandomQuestions(pool, num) {
+            const shuffled = [...pool].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        /**
+         * Dynamically generates the quiz questions for each section from the question pools.
+         * Sets up the initial state for each quiz.
+         */
+        function generateQuizzes() {
+            const sections = ['intro', 'structure', 'innovations'];
+            sections.forEach(sectionId => {
+                const quizContainer = document.getElementById(`quiz-${sectionId}`);
+                const quizForm = quizContainer.querySelector('form');
+                quizForm.innerHTML = ''; // Clear existing questions
+                quizScores[sectionId].score = 0;
+                quizScores[sectionId].completed = false;
+                quizScores[sectionId].userAnswers = {};
+                correctAnswers[sectionId] = {}; // Reset correct answers for dynamic population
+
+                const randomQuestions = getRandomQuestions(allQuestionsPool[sectionId], 5); // Get 5 random questions
+                quizScores[sectionId].total = randomQuestions.length; // Update total questions for this quiz
+
+                randomQuestions.forEach((qObj, index) => {
+                    const qNum = index + 1;
+                    const questionHtml = `
+                        <div class="mb-4 question-block ${index === 0 ? '' : 'hidden'}" id="question-${sectionId}-${qNum}" data-question-index="${qNum}">
+                            <p class="quiz-question">${qNum}. ${qObj.q} <span class="timer-display" id="timer-${sectionId}-${qNum}"> (${QUESTION_TIME_LIMIT}s)</span></p>
+                            ${qObj.options.map((option, i) => `
+                                <label class="quiz-option">
+                                    <input type="radio" name="q${qNum}" value="${String.fromCharCode(97 + i)}"> <span>${option}</span>
+                                </label><br>
+                            `).join('')}
+                            <div class="feedback" id="feedback-${sectionId}-q${qNum}"></div>
+                        </div>
+                    `;
+                    quizForm.insertAdjacentHTML('beforeend', questionHtml);
+                    correctAnswers[sectionId][`q${qNum}`] = qObj.ans; // Store correct answer for this dynamically added question
+                });
+
+                // The submit button is now only a visual placeholder, actual submission is triggered by timer/last answer
+                quizForm.insertAdjacentHTML('beforeend', `<button type="submit" class="quiz-button hidden">Enviar Respuestas (Automático)</button>`);
+                quizForm.insertAdjacentHTML('beforeend', `<div id="score-${sectionId}" class="result-message"></div>`);
+            });
+        }
+
+        /**
+         * Collects user data from the form and initiates the quiz flow.
+         */
+        function collectUserDataAndStart() {
+            userData.userName = document.getElementById('userName').value.trim();
+            userData.userEmail = document.getElementById('userEmail').value.trim();
+            userData.dateTime = new Date().toLocaleString();
+
+            // Basic validation
+            if (!userData.userName || !userData.userEmail) {
+                // Using alert() is generally discouraged in iframes but for a simple local app, it's acceptable here for critical user input.
+                // For production, a custom modal UI would be preferred.
+                alert('Por favor, ingresa tu nombre y correo electrónico para iniciar el test.');
+                return;
+            }
+
+            document.getElementById('user-data-form-container').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden'); // Show main content sections
+            // Automatically start the first quiz after user data is submitted
+            startQuizFlow('intro');
+        }
+
+        /**
+         * Toggles the visibility of a content section and its corresponding quiz.
+         * @param {string} sectionId - The ID of the section to toggle (e.g., 'intro', 'structure').
+         */
+        function toggleContentAndQuiz(sectionId) {
+            const contentDiv = document.getElementById(`content-${sectionId}`);
+            const quizContainer = document.getElementById(`quiz-${sectionId}`);
+            const quizButton = document.getElementById(`button-start-quiz-${sectionId}`);
+
+            if (contentDiv && quizContainer && quizButton) {
+                contentDiv.classList.add('hidden'); // Hide content
+                quizContainer.classList.remove('hidden'); // Show quiz
+                quizButton.disabled = true; // Disable button after click
+                quizButton.textContent = 'Cuestionario Iniciado'; // Change button text
+            }
+        }
+
+        /**
+         * Starts the quiz flow for a given quiz ID: shows the first question and starts its timer.
+         * @param {string} quizId - The ID of the quiz to start.
+         */
+        function startQuizFlow(quizId) {
+            toggleContentAndQuiz(quizId);
+            currentQuizId = quizId;
+            currentQuestionIndex = 1;
+            showQuestion(quizId, currentQuestionIndex);
+            startQuestionTimer();
+        }
+
+        /**
+         * Displays a specific question within the current quiz.
+         * @param {string} quizId - The ID of the current quiz.
+         * @param {number} qIndex - The index of the question to display.
+         */
+        function showQuestion(quizId, qIndex) {
+            const quizForm = document.getElementById(`quiz-${quizId}`).querySelector('form');
+            quizForm.querySelectorAll('.question-block').forEach(qBlock => qBlock.classList.add('hidden')); // Hide all questions
+            const questionBlock = document.getElementById(`question-${quizId}-${qIndex}`);
+            if (questionBlock) {
+                questionBlock.classList.remove('hidden'); // Show the current question
+                // Enable radio buttons for the current question
+                questionBlock.querySelectorAll('input[type="radio"]').forEach(radio => {
+                    radio.disabled = false;
+                    radio.checked = false; // Clear previous selection
+                    radio.closest('.quiz-option').classList.remove('selected-option'); // Clear selected visual
+                });
+            }
+        }
+
+        /**
+         * Starts the countdown timer for the current question.
+         */
+        function startQuestionTimer() {
+            if (currentQuestionTimer) clearInterval(currentQuestionTimer); // Clear any existing timer
+
+            let timeLeft = QUESTION_TIME_LIMIT;
+            const timerDisplay = document.getElementById(`timer-${currentQuizId}-${currentQuestionIndex}`);
+            if (timerDisplay) {
+                timerDisplay.textContent = ` (${timeLeft}s)`;
+            }
+
+            currentQuestionTimer = setInterval(() => {
+                timeLeft--;
+                if (timerDisplay) {
+                    timerDisplay.textContent = ` (${timeLeft}s)`;
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(currentQuestionTimer);
+                    moveToNextQuestion(); // Time's up, move to next question
+                }
+            }, 1000);
+        }
+
+        /**
+         * Moves to the next question in the current quiz or submits the quiz if all questions are answered.
+         */
+        function moveToNextQuestion() {
+            clearInterval(currentQuestionTimer); // Stop current question's timer
+
+            const quizForm = document.getElementById(`quiz-${currentQuizId}`).querySelector('form');
+            const totalQuestionsInQuiz = quizScores[currentQuizId].total;
+
+            // Save the answer for the current question before moving
+            const currentQName = `q${currentQuestionIndex}`;
+            const selectedOptionElement = quizForm.elements[currentQName];
+            const selectedOption = selectedOptionElement ? selectedOptionElement.value : '';
+            quizScores[currentQuizId].userAnswers[currentQName] = selectedOption;
+
+            // Disable radio buttons for the just-answered question
+            const currentQuestionBlock = document.getElementById(`question-${currentQuizId}-${currentQuestionIndex}`);
+            if (currentQuestionBlock) {
+                currentQuestionBlock.querySelectorAll('input[type="radio"]').forEach(radio => radio.disabled = true);
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex <= totalQuestionsInQuiz) {
+                showQuestion(currentQuizId, currentQuestionIndex); // Show next question
+                startQuestionTimer(); // Start timer for the new question
+            } else {
+                // All questions in this quiz are done, programmatically submit the form
+                const submitEvent = new Event('submit');
+                quizForm.dispatchEvent(submitEvent);
+            }
+        }
+
+        // Event listener for radio button clicks to immediately move to next question
+        document.addEventListener('change', (event) => {
+            if (event.target.type === 'radio' && event.target.name.startsWith('q') && event.target.closest('.quiz-container')) {
+                const quizId = event.target.closest('.quiz-container').id.replace('quiz-', '');
+                const qIndex = parseInt(event.target.closest('.question-block').dataset.questionIndex);
+
+                // Only move if the clicked radio belongs to the currently active question
+                if (quizId === currentQuizId && qIndex === currentQuestionIndex) {
+                    // Apply visual selected style
+                    const currentQuestionBlock = document.getElementById(`question-${quizId}-${qIndex}`);
+                    if (currentQuestionBlock) {
+                        currentQuestionBlock.querySelectorAll('.quiz-option').forEach(label => {
+                            label.classList.remove('selected-option');
+                        });
+                        event.target.closest('.quiz-option').classList.add('selected-option');
+                    }
+                    moveToNextQuestion();
+                }
+            }
+        });
+
+        /**
+         * Submits a quiz, collects user answers, marks the quiz as completed,
+         * and triggers the overall completion check. Does NOT provide immediate feedback.
+         * @param {Event} event - The form submission event.
+         * @param {string} quizId - The ID of the quiz being submitted (e.g., 'intro', 'structure').
+         */
+        function submitQuiz(event, quizId) {
+            event.preventDefault(); // Prevent default form submission
+
+            const form = event.target;
+            // The answers are already collected by moveToNextQuestion for each question.
+            quizScores[quizId].completed = true; // Mark this quiz as completed
+
+            const scoreDisplay = document.getElementById(`score-${quizId}`);
+            scoreDisplay.textContent = `Cuestionario completado. Puntaje se mostrará al final.`; // Neutral message
+            scoreDisplay.className = 'result-message correct'; // Still green to indicate completion
+
+            // Disable the quiz form's submit button (though it's hidden now)
+            const submitButton = form.querySelector('.quiz-button');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+
+            checkOverallCompletion(); // Check if all quizzes are done
+        }
+
+        /**
+         * Checks all quizzes for completion. If all are completed, it displays
+         * the feedback and scores for all quizzes and the overall total.
+         */
+        function checkAllQuizzes() {
+            let overallScore = 0;
+            let overallTotal = 0;
+
+            for (const quizId in quizScores) {
+                if (quizScores[quizId].completed) {
+                    let currentQuizScore = 0;
+                    const userAnswers = quizScores[quizId].userAnswers;
+                    const correctAns = correctAnswers[quizId];
+                    const totalQuestions = quizScores[quizId].total;
+
+                    // Iterate through each question in the completed quiz to calculate score and display feedback
+                    for (let i = 1; i <= totalQuestions; i++) {
+                        const questionName = `q${i}`;
+                        const selectedOption = userAnswers[questionName];
+                        const feedbackElement = document.getElementById(`feedback-${quizId}-${questionName}`);
+                        const questionDiv = document.getElementById(`question-${quizId}-${i}`);
+
+                        // Ensure question is visible when displaying results
+                        if (questionDiv) {
+                            questionDiv.classList.remove('hidden');
+                            // Clear previous neutral feedback and styling
+                            feedbackElement.textContent = '';
+                            questionDiv.classList.remove('answered-correctly', 'answered-incorrectly', 'not-answered');
+                        }
+
+                        // Calculate score and set feedback
+                        if (selectedOption === correctAns[questionName]) {
+                            currentQuizScore += 2; // Each correct question worth 2 points
+                            if (feedbackElement) {
+                                feedbackElement.textContent = '¡Correcto!';
+                                feedbackElement.className = 'feedback correct';
+                            }
+                            if (questionDiv) questionDiv.classList.add('answered-correctly');
+                        } else {
+                            if (selectedOption) {
+                                if (feedbackElement) {
+                                    feedbackElement.textContent = `Incorrecto. La respuesta correcta es ${correctAns[questionName].toUpperCase()}.`;
+                                    feedbackElement.className = 'feedback incorrect';
+                                }
+                                if (questionDiv) questionDiv.classList.add('answered-incorrectly');
+                            } else {
+                                if (feedbackElement) {
+                                    feedbackElement.textContent = `No respondiste. La respuesta correcta es ${correctAns[questionName].toUpperCase()}.`;
+                                    feedbackElement.className = 'feedback incorrect';
+                                }
+                                if (questionDiv) questionDiv.classList.add('not-answered');
+                            }
+                        }
+                    }
+                    quizScores[quizId].score = currentQuizScore; // Update the actual score for the quiz
+                    const scoreDisplay = document.getElementById(`score-${quizId}`);
+                    if (scoreDisplay) {
+                        scoreDisplay.textContent = `Tu puntaje en este cuestionario: ${currentQuizScore} / ${totalQuestions * 2}`;
+                        scoreDisplay.className = 'result-message correct'; // Display actual score for individual quiz
+                    }
+                }
+                overallScore += quizScores[quizId].score;
+                overallTotal += quizScores[quizId].total * 2; // Each question is 2 points for total
+            }
+
+            // Update overall score display
+            const overallScoreDisplay = document.getElementById('overall-score-display');
+            overallScoreDisplay.textContent = `Puntaje total alcanzado: ${overallScore} / ${overallTotal}`;
+        }
+
+        /**
+         * Checks if all quizzes are completed. If so, reveals the overall score summary
+         * and triggers the display of all quiz results and PDF/Email generation.
+         */
+        function checkOverallCompletion() {
+            let allCompleted = true;
+            for (const quizId in quizScores) {
+                if (!quizScores[quizId].completed) {
+                    allCompleted = false;
+                    break;
+                }
+            }
+
+            const scoreSummarySection = document.getElementById('score-summary-section');
+            if (allCompleted) {
+                scoreSummarySection.classList.remove('hidden');
+                checkAllQuizzes(); // Call the function to display all results and final score
+                // Automatically generate PDF and "send" email after all quizzes are done and results shown
+                generatePdfReport();
+                // We'll call sendEmailReport here after PDF generation
+                sendEmailReport();
+            } else {
+                scoreSummarySection.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Generates and downloads a PDF report of the quiz results.
+         */
+        async function generatePdfReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+
+            let overallScore = 0;
+            let overallTotal = 0;
+            for (const quizId in quizScores) {
+                overallScore += quizScores[quizId].score;
+                overallTotal += quizScores[quizId].total * 2;
+            }
+
+            // Add user data and overall score
+            doc.setFontSize(18);
+            doc.text('Reporte de Cuestionarios TIC UNESCO', 105, 20, null, null, 'center');
+            doc.setFontSize(12);
+            doc.text(`Nombre: ${userData.userName}`, 14, 35);
+            doc.text(`Email: ${userData.userEmail}`, 14, 42);
+            doc.text(`Sistema Operativo: ${userData.os}`, 14, 49);
+            doc.text(`Navegador: ${userData.browser}`, 14, 56);
+            doc.text(`Fecha y Hora: ${userData.dateTime}`, 14, 63);
+            doc.setFontSize(14);
+            doc.text(`Puntaje Total Final: ${overallScore} / ${overallTotal} puntos`, 14, 75);
+
+            let yOffset = 90; // Starting Y position for quiz details
+
+            // Iterate through quiz results to add to PDF
+            for (const quizId in quizScores) {
+                doc.setFontSize(16);
+                doc.text(`${quizId.charAt(0).toUpperCase() + quizId.slice(1)} Cuestionario: ${quizScores[quizId].score} / ${quizScores[quizId].total * 2} puntos`, 14, yOffset);
+                yOffset += 10;
+                doc.setFontSize(10);
+
+                const userAnswers = quizScores[quizId].userAnswers;
+                const correctAns = correctAnswers[quizId];
+                const totalQuestions = quizScores[quizId].total;
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const qName = `q${i}`;
+                    // Find the original question from the pool based on the current randomized questions
+                    const originalQuestion = allQuestionsPool[quizId].find(q => q.ans === correctAns[qName]);
+
+                    let questionText = originalQuestion ? `${i}. ${originalQuestion.q}` : `Pregunta ${i} (texto no disponible)`;
+                    let optionsText = originalQuestion ? originalQuestion.options : ['Opciones no disponibles'];
+
+                    const userAnswer = userAnswers[qName];
+                    const correctAnswer = correctAns[qName];
+                    const isCorrect = userAnswer === correctAnswer;
+
+                    doc.text(questionText, 14, yOffset);
+                    yOffset += 7;
+                    optionsText.forEach(option => {
+                        doc.text(`- ${option}`, 18, yOffset);
+                        yOffset += 5;
+                    });
+
+                    const userChoiceDisplay = userAnswer ? optionsText.find(opt => opt.startsWith(userAnswer.toUpperCase())) : 'No respondida';
+                    const correctChoiceDisplay = optionsText.find(opt => opt.startsWith(correctAnswer.toUpperCase()));
+
+                    doc.setTextColor(isCorrect ? 39 : 231, isCorrect ? 174 : 76, isCorrect ? 96 : 60); // RGB for green/red
+                    doc.text(`Tu respuesta: ${userChoiceDisplay}`, 14, yOffset);
+                    yOffset += 7;
+                    doc.setTextColor(39, 174, 96); // Green for correct answer display
+                    doc.text(`Respuesta correcta: ${correctChoiceDisplay}`, 14, yOffset);
+                    yOffset += 10;
+                    doc.setTextColor(0, 0, 0); // Reset color to black
+
+                    if (yOffset > 280) { // Check for page overflow
+                        doc.addPage();
+                        yOffset = 20; // Reset Y position for new page
+                    }
+                }
+                yOffset += 15; // Space between quizzes
+                if (yOffset > 280) {
+                    doc.addPage();
+                    yOffset = 20;
+                }
+            }
+
+            doc.save('Reporte_TIC_UNESCO.pdf');
+        }
+
+        /**
+         * Sends the report data to a PHP script for email sending.
+         */
+        async function sendEmailReport() {
+            const phpScriptUrl = './send_email.php'; // <--- IMPORTANT: Update this URL to your PHP script's location
+
+            let overallScore = 0;
+            let overallTotal = 0;
+            for (const quizId in quizScores) {
+                overallScore += quizScores[quizId].score;
+                overallTotal += quizScores[quizId].total * 2;
+            }
+
+            // Prepare quiz results for email body
+            let quizDetailsHtml = '';
+            for (const quizId in quizScores) {
+                quizDetailsHtml += `<h3>${quizId.charAt(0).toUpperCase() + quizId.slice(1)} Cuestionario: ${quizScores[quizId].score} / ${quizScores[quizId].total * 2} puntos</h3>`;
+                const userAnswers = quizScores[quizId].userAnswers;
+                const correctAns = correctAnswers[quizId];
+                const totalQuestions = quizScores[quizId].total;
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const qName = `q${i}`;
+                    const originalQuestion = allQuestionsPool[quizId].find(q => q.ans === correctAns[qName]);
+
+                    const questionText = originalQuestion ? `${i}. ${originalQuestion.q}` : `Pregunta ${i} (texto no disponible)`;
+                    const optionsText = originalQuestion ? originalQuestion.options : ['Opciones no disponibles'];
+
+                    const userAnswer = userAnswers[qName];
+                    const correctAnswer = correctAns[qName];
+                    const isCorrect = userAnswer === correctAnswer;
+
+                    quizDetailsHtml += `<p><strong>${questionText}</strong></p>`;
+                    optionsText.forEach(option => {
+                        quizDetailsHtml += `<p>- ${option}</p>`;
+                    });
+                    const userChoiceDisplay = userAnswer ? optionsText.find(opt => opt.startsWith(userAnswer.toUpperCase())) : 'No respondida';
+                    const correctChoiceDisplay = optionsText.find(opt => opt.startsWith(correctAnswer.toUpperCase()));
+
+                    quizDetailsHtml += `<p style="color:${isCorrect ? '#27ae60' : '#e74c3c'};">Tu respuesta: ${userChoiceDisplay}</p>`;
+                    quizDetailsHtml += `<p style="color:#27ae60;">Respuesta correcta: ${correctChoiceDisplay}</p>`;
+                    quizDetailsHtml += '<br>';
+                }
+            }
+
+
+            const emailBodyHtml = `
+                <h2>Reporte de Cuestionarios TIC UNESCO</h2>
+                <p><strong>Nombre:</strong> ${userData.userName}</p>
+                <p><strong>Email:</strong> ${userData.userEmail}</p>
+                <p><strong>Sistema Operativo:</strong> ${userData.os}</p>
+                <p><strong>Navegador:</strong> ${userData.browser}</p>
+                <p><strong>Fecha y Hora:</strong> ${userData.dateTime}</p>
+                <h3>Puntaje Total Final: ${overallScore} / ${overallTotal} puntos</h3>
+                <hr/>
+                ${quizDetailsHtml}
+            `;
+
+            try {
+                const response = await fetch(phpScriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // Send data as JSON
+                    },
+                    body: JSON.stringify({
+                        to: '941981300.b@gmail.com',
+                        subject: `Reporte de Resultados TIC UNESCO - ${userData.userName}`,
+                        htmlContent: emailBodyHtml
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('El reporte se ha enviado con éxito al correo electrónico: 941981300.b@gmail.com');
+                } else {
+                    alert('Error al enviar el reporte por correo electrónico: ' + result.message);
+                    console.error('Email send error:', result.message);
+                }
+            } catch (error) {
+                alert('Ocurrió un error de red al intentar enviar el correo electrónico.');
+                console.error('Network error sending email:', error);
+            }
+        }
+
+
+        // Initial call to generate quizzes when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', generateQuizzes);
+    </script>
+</body>
+</html>
